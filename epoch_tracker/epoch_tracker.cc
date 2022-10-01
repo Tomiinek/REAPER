@@ -584,7 +584,7 @@ void EpochTracker::GetPulseCorrelations(float window_dur, float peak_thresh) {
 }
 
 
-void EpochTracker::Window(const std::vector<float> input, int32_t offset, size_t size,
+void EpochTracker::Window(const std::vector<float>& input, int32_t offset, size_t size,
                           float* output) {
   if (size != window_.size()) {
     window_.resize(size);
@@ -1018,6 +1018,10 @@ void EpochTracker::DoDynamicProgramming(void) {
 
 
 bool EpochTracker::BacktrackAndSaveOutput(void) {
+  if (resid_peaks_.size() == 0) {
+    fprintf(stderr, "Can't backtrack with no residual peaks\n");
+    return false;
+  }
   //  Now find the best period hypothesis at the end of the signal,
   //  and backtrack from there.
   float min_cost = 1.0e30;
@@ -1198,6 +1202,7 @@ bool EpochTracker::WriteDebugData(const std::vector<float>& data,
   }
   size_t  written = fwrite(&(data.front()), sizeof(data.front()),
                            data.size(), out);
+  fclose(out);
   if (written != data.size()) {
     fprintf(stderr, "Problems writing debug data (%d %d)\n",
             static_cast<int>(written), static_cast<int>(data.size()));
